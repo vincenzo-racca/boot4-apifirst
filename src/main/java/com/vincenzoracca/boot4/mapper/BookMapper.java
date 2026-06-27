@@ -41,7 +41,8 @@ public interface BookMapper {
             return toBook(audioBookDto);
         }
 
-        throw new RuntimeException(String.format("Cannot map instance of CreateBookRequest: %s", createBookRequest));
+        throw new IllegalArgumentException(
+                String.format("Unsupported CreateBookRequest subtype: %s", createBookRequest));
     }
 
 

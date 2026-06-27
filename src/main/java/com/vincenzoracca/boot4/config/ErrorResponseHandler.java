@@ -33,7 +33,7 @@ public class ErrorResponseHandler extends ResponseEntityExceptionHandler {
         }
 
         else if(ex instanceof BookDuplicateException) {
-            statusCode = 400;
+            statusCode = 409;
             defaultDetail.append("Book duplicated");
         }
 

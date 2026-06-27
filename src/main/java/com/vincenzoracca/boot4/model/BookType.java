@@ -4,7 +4,7 @@ public enum BookType {
 
     PAPERBACK("PAPERBACK"),
     EBOOK("EBOOK"),
-    AUDIOBOOK("AUDIO");
+    AUDIOBOOK("AUDIOBOOK");
 
     private String value;
 
