@@ -2,28 +2,28 @@ openapi: 3.0.3
 
 info:
   title: Book API
-  description: API per la gestione dei libri
+  description: API for book management
   version: 1.0.0
 
 servers:
   - url: http://localhost:8080/api
-    description: Server locale
+    description: Local server
 
 tags:
   - name: Books
-    description: Operazioni sui libri
+    description: Operations on books
 
 paths:
   /books:
     get:
       tags:
         - Books
-      summary: Recupera tutti i libri
+      summary: Retrieve all books
       operationId: getAllBooks
       parameters:
         - name: page
           in: query
-          description: Numero della pagina (partendo da 0)
+          description: Page number (starting from 0)
           required: false
           schema:
             type: integer
@@ -32,7 +32,7 @@ paths:
 
         - name: size
           in: query
-          description: Numero di elementi per pagina
+          description: Number of items per page
           required: false
           schema:
             type: integer
@@ -42,9 +42,9 @@ paths:
         - name: sort
           in: query
           description: >
-            Criterio di ordinamento nel formato `campo,(asc|desc)`.
-            Può essere specificato più volte.
-            Esempi: `title,asc`, `author,desc`
+            Sorting criteria in the format `field,(asc|desc)`.
+            Can be specified multiple times.
+            Examples: `title,asc`, `author,desc`
           required: false
           explode: true
           schema:
@@ -56,7 +56,7 @@ paths:
             - author,desc
       responses:
         '200':
-          description: Lista dei libri recuperata con successo
+          description: List of books retrieved successfully
           content:
             application/json:
               schema:
@@ -65,7 +65,7 @@ paths:
     post:
       tags:
         - Books
-      summary: Crea un nuovo libro
+      summary: Create a new book
       operationId: createBook
       requestBody:
         required: true
@@ -75,20 +75,20 @@ paths:
               $ref: '#/components/schemas/CreateBookRequest'
       responses:
         '201':
-          description: Libro creato con successo
+          description: Book created successfully
           headers:
             Location:
               schema:
                 type: string
         '409':
-          description: Esiste già un libro con lo stesso ISBN
+          description: A book with the same ISBN already exists
 
   /books/{isbn}:
     parameters:
       - name: isbn
         in: path
         required: true
-        description: Codice ISBN del libro
+        description: ISBN code of the book
         schema:
           type: string
           example: "9780132350884"
@@ -96,22 +96,22 @@ paths:
     get:
       tags:
         - Books
-      summary: Recupera un libro tramite ISBN
+      summary: Retrieve a book by ISBN
       operationId: getBookByIsbn
       responses:
         '200':
-          description: Libro trovato
+          description: Book found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BookResponse'
         '404':
-          description: Libro non trovato
+          description: Book not found
 
     put:
       tags:
         - Books
-      summary: Aggiorna un libro esistente
+      summary: Update an existing book
       operationId: updateBook
       requestBody:
         required: true
@@ -121,24 +121,24 @@ paths:
               $ref: '#/components/schemas/UpdateBookRequest'
       responses:
         '200':
-          description: Libro aggiornato con successo
+          description: Book updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BookResponse'
         '404':
-          description: Libro non trovato
+          description: Book not found
 
     delete:
       tags:
         - Books
-      summary: Elimina un libro
+      summary: Delete a book
       operationId: deleteBook
       responses:
         '204':
-          description: Libro eliminato con successo
+          description: Book deleted successfully
         '404':
-          description: Libro non trovato
+          description: Book not found
 
 components:
   schemas:
@@ -152,7 +152,7 @@ components:
       properties:
         bookType:
           type: string
-          description: Determina il tipo specifico di libro
+          description: Determines the specific type of book
         isbn:
           type: string
           example: "9780132350884"
@@ -178,11 +178,11 @@ components:
           properties:
             pages:
               type: integer
-              description: Numero di pagine fisiche
+              description: Number of physical pages
               example: 350
             weightGrams:
               type: number
-              description: Peso del libro in grammi
+              description: Weight of the book in grams
               example: 450.5
 
     EBookDto:
