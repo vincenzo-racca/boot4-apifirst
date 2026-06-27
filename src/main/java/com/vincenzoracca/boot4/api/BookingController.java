@@ -46,7 +46,7 @@ public class BookingController implements BooksApi {
             Integer size,
             List<String> sort
     ) {
-        BookPage bookPage = bookService.findAll(page, size);
+        BookPage bookPage = bookService.findAll(page, size, sort);
         return ResponseEntity.ok(bookPage);
     }
 }

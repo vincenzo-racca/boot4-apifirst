@@ -73,9 +73,10 @@ The database is pre-populated with 13 sample records via the `data.sql` file.
 You can fetch a specific book using `curl`:
 
 ```bash
-curl --location 'http://localhost:8080/books/9365898080'
-
+curl --location 'http://localhost:8080/books?page=0&size=10&sort=title,desc,author,desc'
 ```
+
+You can also use Swagger UI to test the endpoints on https://petstore.swagger.io/?url=https://raw.githubusercontent.com/vincenzo-racca/boot4-apifirst/refs/heads/main/docs/openapi/book-openapi.yml.
 
 ### Accessing the Database Console
 

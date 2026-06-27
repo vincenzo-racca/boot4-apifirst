@@ -2,6 +2,7 @@ package com.vincenzoracca.boot4.config;
 
 import com.vincenzoracca.boot4.exeption.BookDuplicateException;
 import com.vincenzoracca.boot4.exeption.BookNotFoundException;
+import com.vincenzoracca.boot4.exeption.InvalidSortException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.*;
@@ -19,7 +20,8 @@ public class ErrorResponseHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({
             BookNotFoundException.class,
-            BookDuplicateException.class
+            BookDuplicateException.class,
+            InvalidSortException.class
     })
     public ResponseEntity<Object> handleCustomException(Exception ex, WebRequest request) {
         log.warn(ex.getMessage());
@@ -33,6 +35,11 @@ public class ErrorResponseHandler extends ResponseEntityExceptionHandler {
         else if(ex instanceof BookDuplicateException) {
             statusCode = 400;
             defaultDetail.append("Book duplicated");
+        }
+
+        else if(ex instanceof InvalidSortException) {
+            statusCode = 400;
+            defaultDetail.append("Invalid sort");
         }
 
         HttpStatusCode status = HttpStatusCode.valueOf(statusCode);

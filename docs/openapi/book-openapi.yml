@@ -141,6 +141,7 @@ paths:
           description: Book not found
 
 components:
+
   schemas:
     BookDto:
       type: object
@@ -216,8 +217,10 @@ components:
         - $ref: '#/components/schemas/PaperbackDto'
 
     CreateBookRequest:
-      allOf:
-        - $ref: '#/components/schemas/BookDto'
+      oneOf:
+        - $ref: '#/components/schemas/EBookDto'
+        - $ref: '#/components/schemas/AudioBookDto'
+        - $ref: '#/components/schemas/PaperbackDto'
 
     UpdateBookRequest:
       type: object
@@ -274,9 +277,6 @@ components:
           type: boolean
           example: false
 
-        sort:
-          $ref: '#/components/schemas/Sort'
-
     Pageable:
       type: object
       properties:
@@ -298,23 +298,5 @@ components:
           example: true
 
         unpaged:
-          type: boolean
-          example: false
-
-        sort:
-          $ref: '#/components/schemas/Sort'
-
-    Sort:
-      type: object
-      properties:
-        sorted:
-          type: boolean
-          example: true
-
-        unsorted:
-          type: boolean
-          example: false
-
-        empty:
           type: boolean
           example: false
