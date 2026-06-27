@@ -15,6 +15,8 @@ public record Book(
         String title, String author,
         BigDecimal price,
         LocalDate publicationDate,
+        Integer pages,
+        BigDecimal weightGrams,
         String format,
         BigDecimal fileSizeMb,
         String narrator,
@@ -35,6 +37,8 @@ public record Book(
         private String author;
         private BigDecimal price;
         private LocalDate publicationDate;
+        private Integer pages;
+        private BigDecimal weightGrams;
         private String format;
         private BigDecimal fileSizeMb;
         private String narrator;
@@ -77,6 +81,16 @@ public record Book(
             return this;
         }
 
+        public BookBuilder pages(Integer pages) {
+            this.pages = pages;
+            return this;
+        }
+
+        public BookBuilder weightGrams(BigDecimal weightGrams) {
+            this.weightGrams = weightGrams;
+            return this;
+        }
+
         public BookBuilder format(String format) {
             this.format = format;
             return this;
@@ -108,7 +122,7 @@ public record Book(
         }
 
         public Book build() {
-            return new Book(id, bookType, isbn, title, author, price, publicationDate, format, fileSizeMb, narrator, durationMinutes, createdAt, updatedAt);
+            return new Book(id, bookType, isbn, title, author, price, publicationDate, pages, weightGrams, format, fileSizeMb, narrator, durationMinutes, createdAt, updatedAt);
         }
     }
 }

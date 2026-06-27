@@ -61,6 +61,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BookPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
 
     post:
       tags:
@@ -73,15 +75,50 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateBookRequest'
+            examples:
+              paperback:
+                value:
+                  bookType: PAPERBACK
+                  isbn: "9780132350884"
+                  title: Clean Code
+                  author: Robert C. Martin
+                  price: 45.00
+                  publicationDate: "2008-08-01"
+                  pages: 464
+                  weightGrams: 730.0
+              ebook:
+                value:
+                  bookType: EBOOK
+                  isbn: "9781234567890"
+                  title: Mastering Java 21
+                  author: Luca Rossi
+                  price: 45.50
+                  publicationDate: "2024-11-15"
+                  format: EPUB
+                  fileSizeMb: 8.2
+              audiobook:
+                value:
+                  bookType: AUDIOBOOK
+                  isbn: "9782345678901"
+                  title: Cloud Native Architecture
+                  author: Marco Bianchi
+                  price: 35.00
+                  publicationDate: "2023-08-20"
+                  narrator: Luca Ward
+                  durationMinutes: 450
       responses:
         '201':
           description: Book created successfully
           headers:
             Location:
+              description: URI of the created book
               schema:
                 type: string
+                format: uri
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '409':
-          description: A book with the same ISBN already exists
+          $ref: '#/components/responses/Conflict'
 
   /books/{isbn}:
     parameters:
@@ -106,45 +143,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/BookResponse'
         '404':
-          description: Book not found
-
-    put:
-      tags:
-        - Books
-      summary: Update an existing book
-      operationId: updateBook
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateBookRequest'
-      responses:
-        '200':
-          description: Book updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BookResponse'
-        '404':
-          description: Book not found
-
-    delete:
-      tags:
-        - Books
-      summary: Delete a book
-      operationId: deleteBook
-      responses:
-        '204':
-          description: Book deleted successfully
-        '404':
-          description: Book not found
+          $ref: '#/components/responses/NotFound'
 
 components:
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+    Conflict:
+      description: Book already exists
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+    NotFound:
+      description: Book not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
 
   schemas:
-    BookDto:
+    BookBase:
       type: object
+      description: >
+        Common book fields shared by request and response payloads.
+        The model is flat: every subtype-specific field is optional and its relevance
+        depends on `bookType`. The coherence between `bookType` and the subtype-specific
+        fields (e.g. an AUDIOBOOK must not carry `pages`/`format`) is validated
+        server-side; an incoherent payload is rejected with HTTP 400.
       required:
         - bookType
         - isbn
@@ -153,7 +185,12 @@ components:
       properties:
         bookType:
           type: string
-          description: Determines the specific type of book
+          description: Determines which subtype-specific fields are meaningful
+          enum:
+            - PAPERBACK
+            - EBOOK
+            - AUDIOBOOK
+          example: EBOOK
         isbn:
           type: string
           example: "9780132350884"
@@ -165,73 +202,50 @@ components:
           example: Robert C. Martin
         price:
           type: number
-      discriminator:
-        propertyName: bookType
-        mapping:
-          PAPERBACK: '#/components/schemas/PaperbackDto'
-          EBOOK: '#/components/schemas/EBookDto'
-          AUDIOBOOK: '#/components/schemas/AudioBookDto'
-
-    PaperbackDto:
-      allOf:
-        - $ref: '#/components/schemas/BookDto'
-        - type: object
-          properties:
-            pages:
-              type: integer
-              description: Number of physical pages
-              example: 350
-            weightGrams:
-              type: number
-              description: Weight of the book in grams
-              example: 450.5
-
-    EBookDto:
-      allOf:
-        - $ref: '#/components/schemas/BookDto'
-        - type: object
-          properties:
-            format:
-              type: string
-              example: "EPUB"
-            fileSizeMb:
-              type: number
-              example: 5.4
-
-    AudioBookDto:
-      allOf:
-        - $ref: '#/components/schemas/BookDto'
-        - type: object
-          properties:
-            narrator:
-              type: string
-              example: "Morgan Freeman"
-            durationMinutes:
-              type: integer
-              example: 360
-
-    BookResponse:
-      oneOf:
-        - $ref: '#/components/schemas/EBookDto'
-        - $ref: '#/components/schemas/AudioBookDto'
-        - $ref: '#/components/schemas/PaperbackDto'
-
-    CreateBookRequest:
-      oneOf:
-        - $ref: '#/components/schemas/EBookDto'
-        - $ref: '#/components/schemas/AudioBookDto'
-        - $ref: '#/components/schemas/PaperbackDto'
-
-    UpdateBookRequest:
-      type: object
-      properties:
-        title:
-          type: string
-        author:
-          type: string
+          example: 45.00
         publicationDate:
           type: string
           format: date
+          example: "2008-08-01"
+        pages:
+          type: integer
+          description: Number of physical pages, only meaningful when bookType is PAPERBACK
+          example: 464
+        weightGrams:
+          type: number
+          description: Weight of the book in grams, only meaningful when bookType is PAPERBACK
+          example: 730.0
+        format:
+          type: string
+          description: Digital format, only meaningful when bookType is EBOOK
+          example: EPUB
+        fileSizeMb:
+          type: number
+          description: File size in MB, only meaningful when bookType is EBOOK
+          example: 8.2
+        narrator:
+          type: string
+          description: Narrator name, only meaningful when bookType is AUDIOBOOK
+          example: Luca Ward
+        durationMinutes:
+          type: integer
+          description: Duration in minutes, only meaningful when bookType is AUDIOBOOK
+          example: 450
+
+    CreateBookRequest:
+      description: >
+        Payload to create a book. Shares its shape with BookBase but is kept as a
+        distinct type so request and response contracts can evolve independently.
+      allOf:
+        - $ref: '#/components/schemas/BookBase'
+
+    BookResponse:
+      description: >
+        Book representation returned by read operations. Shares its shape with BookBase
+        but is kept as a distinct type so request and response contracts can evolve
+        independently.
+      allOf:
+        - $ref: '#/components/schemas/BookBase'
 
     BookPage:
       type: object
@@ -300,3 +314,24 @@ components:
         unpaged:
           type: boolean
           example: false
+
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+          example: about:blank
+        title:
+          type: string
+          example: Bad Request
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: Invalid request
+        instance:
+          type: string
+          format: uri
+          example: /api/books

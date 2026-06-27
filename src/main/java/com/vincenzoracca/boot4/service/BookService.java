@@ -2,6 +2,7 @@ package com.vincenzoracca.boot4.service;
 
 import com.vincenzoracca.boot4.exeption.BookDuplicateException;
 import com.vincenzoracca.boot4.exeption.BookNotFoundException;
+import com.vincenzoracca.boot4.exeption.InvalidBookRequestException;
 import com.vincenzoracca.boot4.exeption.InvalidSortException;
 import com.vincenzoracca.boot4.mapper.BookMapper;
 import com.vincenzoracca.boot4.model.Book;
@@ -56,6 +57,7 @@ public class BookService {
     @Transactional
     public Book save(CreateBookRequest request) {
         Book book = bookMapper.toBook(request);
+        validateSubtypeFields(book);
 
         try {
             return bookingRepository.save(book);
@@ -64,6 +66,33 @@ public class BookService {
             throw new BookDuplicateException(book.isbn());
         }
 
+    }
+
+    private void validateSubtypeFields(Book book) {
+        if(book.bookType() == null) {
+            throw new InvalidBookRequestException("bookType is required");
+        }
+
+        switch (book.bookType()) {
+            case PAPERBACK -> rejectIfHasFields(
+                    book.format() != null || book.fileSizeMb() != null || book.narrator() != null || book.durationMinutes() != null,
+                    "PAPERBACK books cannot contain format, fileSizeMb, narrator or durationMinutes"
+            );
+            case EBOOK -> rejectIfHasFields(
+                    book.pages() != null || book.weightGrams() != null || book.narrator() != null || book.durationMinutes() != null,
+                    "EBOOK books cannot contain pages, weightGrams, narrator or durationMinutes"
+            );
+            case AUDIOBOOK -> rejectIfHasFields(
+                    book.pages() != null || book.weightGrams() != null || book.format() != null || book.fileSizeMb() != null,
+                    "AUDIOBOOK books cannot contain pages, weightGrams, format or fileSizeMb"
+            );
+        }
+    }
+
+    private void rejectIfHasFields(boolean invalid, String message) {
+        if(invalid) {
+            throw new InvalidBookRequestException(message);
+        }
     }
 
     /**
