@@ -1,0 +1,320 @@
+openapi: 3.0.3
+
+info:
+  title: Book API
+  description: API per la gestione dei libri
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api
+    description: Server locale
+
+tags:
+  - name: Books
+    description: Operazioni sui libri
+
+paths:
+  /books:
+    get:
+      tags:
+        - Books
+      summary: Recupera tutti i libri
+      operationId: getAllBooks
+      parameters:
+        - name: page
+          in: query
+          description: Numero della pagina (partendo da 0)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+
+        - name: size
+          in: query
+          description: Numero di elementi per pagina
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+
+        - name: sort
+          in: query
+          description: >
+            Criterio di ordinamento nel formato `campo,(asc|desc)`.
+            Può essere specificato più volte.
+            Esempi: `title,asc`, `author,desc`
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example:
+            - title,asc
+            - author,desc
+      responses:
+        '200':
+          description: Lista dei libri recuperata con successo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookPage'
+
+    post:
+      tags:
+        - Books
+      summary: Crea un nuovo libro
+      operationId: createBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookRequest'
+      responses:
+        '201':
+          description: Libro creato con successo
+          headers:
+            Location:
+              schema:
+                type: string
+        '409':
+          description: Esiste già un libro con lo stesso ISBN
+
+  /books/{isbn}:
+    parameters:
+      - name: isbn
+        in: path
+        required: true
+        description: Codice ISBN del libro
+        schema:
+          type: string
+          example: "9780132350884"
+
+    get:
+      tags:
+        - Books
+      summary: Recupera un libro tramite ISBN
+      operationId: getBookByIsbn
+      responses:
+        '200':
+          description: Libro trovato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookResponse'
+        '404':
+          description: Libro non trovato
+
+    put:
+      tags:
+        - Books
+      summary: Aggiorna un libro esistente
+      operationId: updateBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookRequest'
+      responses:
+        '200':
+          description: Libro aggiornato con successo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookResponse'
+        '404':
+          description: Libro non trovato
+
+    delete:
+      tags:
+        - Books
+      summary: Elimina un libro
+      operationId: deleteBook
+      responses:
+        '204':
+          description: Libro eliminato con successo
+        '404':
+          description: Libro non trovato
+
+components:
+  schemas:
+    BookDto:
+      type: object
+      required:
+        - bookType
+        - isbn
+        - title
+        - author
+      properties:
+        bookType:
+          type: string
+          description: Determina il tipo specifico di libro
+        isbn:
+          type: string
+          example: "9780132350884"
+        title:
+          type: string
+          example: Clean Code
+        author:
+          type: string
+          example: Robert C. Martin
+        price:
+          type: number
+      discriminator:
+        propertyName: bookType
+        mapping:
+          PAPERBACK: '#/components/schemas/PaperbackDto'
+          EBOOK: '#/components/schemas/EBookDto'
+          AUDIOBOOK: '#/components/schemas/AudioBookDto'
+
+    PaperbackDto:
+      allOf:
+        - $ref: '#/components/schemas/BookDto'
+        - type: object
+          properties:
+            pages:
+              type: integer
+              description: Numero di pagine fisiche
+              example: 350
+            weightGrams:
+              type: number
+              description: Peso del libro in grammi
+              example: 450.5
+
+    EBookDto:
+      allOf:
+        - $ref: '#/components/schemas/BookDto'
+        - type: object
+          properties:
+            format:
+              type: string
+              example: "EPUB"
+            fileSizeMb:
+              type: number
+              example: 5.4
+
+    AudioBookDto:
+      allOf:
+        - $ref: '#/components/schemas/BookDto'
+        - type: object
+          properties:
+            narrator:
+              type: string
+              example: "Morgan Freeman"
+            durationMinutes:
+              type: integer
+              example: 360
+
+    BookResponse:
+      oneOf:
+        - $ref: '#/components/schemas/EBookDto'
+        - $ref: '#/components/schemas/AudioBookDto'
+        - $ref: '#/components/schemas/PaperbackDto'
+
+    CreateBookRequest:
+      allOf:
+        - $ref: '#/components/schemas/BookDto'
+
+    UpdateBookRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+        publicationDate:
+          type: string
+          format: date
+
+    BookPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookResponse'
+
+        pageable:
+          $ref: '#/components/schemas/Pageable'
+
+        totalElements:
+          type: integer
+          format: int64
+          example: 100
+
+        totalPages:
+          type: integer
+          example: 5
+
+        size:
+          type: integer
+          example: 20
+
+        number:
+          type: integer
+          example: 0
+
+        numberOfElements:
+          type: integer
+          example: 20
+
+        first:
+          type: boolean
+          example: true
+
+        last:
+          type: boolean
+          example: false
+
+        empty:
+          type: boolean
+          example: false
+
+        sort:
+          $ref: '#/components/schemas/Sort'
+
+    Pageable:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+          example: 0
+
+        pageSize:
+          type: integer
+          example: 20
+
+        offset:
+          type: integer
+          format: int64
+          example: 0
+
+        paged:
+          type: boolean
+          example: true
+
+        unpaged:
+          type: boolean
+          example: false
+
+        sort:
+          $ref: '#/components/schemas/Sort'
+
+    Sort:
+      type: object
+      properties:
+        sorted:
+          type: boolean
+          example: true
+
+        unsorted:
+          type: boolean
+          example: false
+
+        empty:
+          type: boolean
+          example: false
