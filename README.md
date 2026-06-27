@@ -76,6 +76,21 @@ You can fetch a specific book using `curl`:
 curl --location 'http://localhost:8080/books?page=0&size=10&sort=title,desc,author,desc'
 ```
 
+Create new resource:
+```bash
+curl --location 'http://localhost:8080/books' \
+--header 'Content-Type: application/json' \
+--data '{
+            "bookType": "AUDIOBOOK",
+            "isbn": "0788901234567",
+            "title": "The Agile Developer",
+            "author": "Zazza",
+            "durationMinutes": 280,
+            "narrator": "Pino Insegno",
+            "price": 28.50
+        }'
+```
+
 You can also use Swagger UI to test the endpoints on https://petstore.swagger.io/?url=https://raw.githubusercontent.com/vincenzo-racca/boot4-apifirst/refs/heads/main/docs/openapi/book-openapi.yml.
 
 ### Accessing the Database Console
