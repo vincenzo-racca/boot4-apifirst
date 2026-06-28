@@ -153,6 +153,7 @@
 								<interfaceOnly>true</interfaceOnly>
 								<openApiNullable>false</openApiNullable>
 								<useSpringBoot4>true</useSpringBoot4>
+								<useJackson3>true</useJackson3>
 								<documentationProvider>none</documentationProvider>
 								<annotationLibrary>none</annotationLibrary>
 								<apiPackage>com.vincenzoracca.boot4.api.generated</apiPackage>
