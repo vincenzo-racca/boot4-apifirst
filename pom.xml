@@ -152,7 +152,6 @@
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>
 								<openApiNullable>false</openApiNullable>
-								<useJakartaEe>true</useJakartaEe>
 								<useSpringBoot4>true</useSpringBoot4>
 								<documentationProvider>none</documentationProvider>
 								<annotationLibrary>none</annotationLibrary>
