@@ -14,6 +14,18 @@ This project is a modern Spring Boot application that demonstrates the **API-Fir
 
 ---
 
+## Polymorphism / Data Model
+
+The domain model is **polymorphic**: `BookDto` is the abstract base, and each concrete
+book type (`PaperbackDto`, `EBookDto`, `AudioBookDto`) extends it through the OpenAPI
+`allOf` construct. The `bookType` property acts as the **discriminator** that selects the
+concrete type at runtime. The `CreateBookRequest` (input) and `BookResponse` (output)
+contracts are defined as a `oneOf` over the three concrete subtypes.
+
+<img src="apifirst.svg" alt="apifirst" width="800"/>
+
+---
+
 ## Technology Stack
 
 | Component | Technology / Version |
