@@ -5,7 +5,7 @@ This project is a modern Spring Boot application that demonstrates the **API-Fir
 ## Core Features
 
 * **API-First Approach:** REST API interfaces and DTOs are generated at compile time using the `openapi-generator-maven-plugin`.
-* **Polymorphism:** Supports specific fields for different book formats via OpenAPI `discriminator` and Jackson mapping.
+* **Polymorphism (No Discriminator):** Unlike the `main` branch, this branch does **not** use the OpenAPI `discriminator`. Subtype-specific fields are modeled on a single flat schema (`BookBase`) and their coherence with `bookType` is validated server-side (see [Modeling Approach](#modeling-approach-no-discriminator)).
 * **Spring Data JDBC:** Uses Single Table Inheritance to map polymorphic entities to an in-memory H2 database.
 * **Automatic Auditing:** Automatically populates `createdAt` and `updatedAt` timestamps on database records.
 * **Global Exception Handling:** Returns standardized error responses using Spring's `ProblemDetail` for 404 (Not Found) and 400 (Duplicate) scenarios.
@@ -36,6 +36,52 @@ The REST API is defined in `docs/openapi/book-openapi.yml`. During the Maven bui
 * `GET /books`: Retrieve a paginated list of all books.
 * `GET /books/{isbn}`: Retrieve details of a specific book by its ISBN.
 * `POST /books`: Create a new book (requires a `bookType` of PAPERBACK, EBOOK, or AUDIOBOOK).
+
+---
+
+## Modeling Approach: No Discriminator
+
+> This branch (`feature/nodiscriminator`) intentionally diverges from `main` in how
+> polymorphic books are modeled in the OpenAPI contract.
+
+### How `main` works (discriminator-based)
+
+On the `main` branch the spec relies on the OpenAPI `discriminator`:
+
+* A base `BookDto` declares `discriminator: { propertyName: bookType }` with a
+  `mapping` to the subtype schemas.
+* `PaperbackDto`, `EBookDto`, and `AudioBookDto` extend the base via `allOf`, each
+  carrying only its own fields.
+* `CreateBookRequest` / `BookResponse` are `oneOf` those three subtype schemas.
+* The generator produces three polymorphic DTO classes, and Jackson performs
+  polymorphic (de)serialization driven by the `bookType` value. `BookMapper` then
+  dispatches by runtime subtype (`instanceof` / `switch`).
+
+### How this branch works (flat model, no discriminator)
+
+This branch removes the `discriminator` entirely and uses a **single flat schema**:
+
+* A single `BookBase` schema declares **all** fields. Every subtype-specific field
+  (`pages`, `weightGrams`, `format`, `fileSizeMb`, `narrator`, `durationMinutes`)
+  is **optional**, and its relevance depends on `bookType`.
+* `CreateBookRequest` and `BookResponse` are simply `allOf: [BookBase]` (kept as
+  distinct types so request/response contracts can evolve independently).
+* The generator produces one flat DTO; there is **no Jackson polymorphism** and no
+  runtime subtype dispatch. `BookMapper` is reduced to a single
+  `toBook(CreateBookRequest)` / `toBookResponse(Book)` pair.
+* Because the schema no longer enforces which fields belong to which type, the
+  coherence between `bookType` and the subtype-specific fields is validated
+  **server-side**: `BookService.validateSubtypeFields(...)` rejects an incoherent
+  payload (e.g. an `AUDIOBOOK` carrying `pages`) by throwing
+  `InvalidBookRequestException`, which is mapped to an **HTTP 400** response using
+  Spring's `ProblemDetail`.
+
+### Trade-offs
+
+* **Pros:** simpler generated model and mapper, no Jackson polymorphic
+  configuration, and request/response contracts that are easy to evolve.
+* **Cons:** field/type coherence is no longer guaranteed by the contract itself and
+  must be enforced (and tested) in application code.
 
 ---
 
